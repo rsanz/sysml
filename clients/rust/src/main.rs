@@ -7,12 +7,11 @@ fn parse_base_url(base_url: &str) -> (&str, u16) {
         .strip_prefix("http://")
         .or_else(|| base_url.strip_prefix("https://"))
         .unwrap_or(base_url);
-    let mut parts = stripped.split(':');
-    let host = parts.next().unwrap_or("127.0.0.1");
-    let port = parts
-        .next()
-        .and_then(|v| v.parse::<u16>().ok())
-        .unwrap_or(9000);
+    let authority = stripped.split('/').next().unwrap_or(stripped);
+    let mut host_port = authority.rsplitn(2, ':');
+    let port_candidate = host_port.next().unwrap_or("");
+    let host = host_port.next().unwrap_or(authority);
+    let port = port_candidate.parse::<u16>().unwrap_or(9000);
     (host, port)
 }
 
@@ -23,7 +22,8 @@ fn main() {
     let endpoint = env::args().nth(2).unwrap_or_else(|| "/about".to_string());
 
     let (host, port) = parse_base_url(&base_url);
-    let mut stream = TcpStream::connect((host, port)).expect("connect failed");
+    let mut stream = TcpStream::connect((host, port))
+        .unwrap_or_else(|err| panic!("connect failed to {}:{}: {}", host, port, err));
     let request = format!(
         "GET {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n",
         endpoint, host
