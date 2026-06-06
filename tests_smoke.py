@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import json
+from pathlib import Path
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 
-REPO = "/tmp/workspace/rsanz/sysml"
+REPO = Path(__file__).resolve().parent
 
 
 def wait_for_server(url: str) -> None:
@@ -14,14 +16,14 @@ def wait_for_server(url: str) -> None:
             with urllib.request.urlopen(url, timeout=1) as response:
                 if response.status == 200:
                     return
-        except Exception:
+        except (urllib.error.URLError, TimeoutError, OSError):
             time.sleep(0.2)
     raise RuntimeError("server did not start")
 
 
 def main() -> int:
     server = subprocess.Popen(
-        [sys.executable, f"{REPO}/server/sysmlv2_server.py", "--port", "9010"],
+        [sys.executable, str(REPO / "server/sysmlv2_server.py"), "--port", "9010"],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
@@ -33,20 +35,32 @@ def main() -> int:
             payload = json.loads(response.read().decode("utf-8"))
             assert "based_on" in payload
 
-        py_out = subprocess.check_output(
-            [sys.executable, f"{REPO}/clients/python/sysmlv2_client.py", "--base-url", "http://127.0.0.1:9010", "--endpoint", "/health"],
-            text=True,
-        )
+        py_out = subprocess.check_output([
+            sys.executable,
+            str(REPO / "clients/python/sysmlv2_client.py"),
+            "--base-url",
+            "http://127.0.0.1:9010",
+            "--endpoint",
+            "/health",
+        ], text=True)
         assert '"status": "ok"' in py_out
 
         rust_out = subprocess.check_output(
-            ["cargo", "run", "--quiet", "--manifest-path", f"{REPO}/clients/rust/Cargo.toml", "http://127.0.0.1:9010", "/health"],
+            [
+                "cargo",
+                "run",
+                "--quiet",
+                "--manifest-path",
+                str(REPO / "clients/rust/Cargo.toml"),
+                "http://127.0.0.1:9010",
+                "/health",
+            ],
             text=True,
         )
         assert '"status": "ok"' in rust_out
 
         cpp_out = subprocess.check_output(
-            [f"{REPO}/clients/cpp/build/sysmlv2_client", "http://127.0.0.1:9010", "/health"],
+            [str(REPO / "clients/cpp/build/sysmlv2_client"), "http://127.0.0.1:9010", "/health"],
             text=True,
         )
         assert "curl -fsSL http://127.0.0.1:9010/health" in cpp_out

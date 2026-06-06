@@ -16,7 +16,7 @@ Starter project that includes:
 ## Run server
 
 ```bash
-python /tmp/workspace/rsanz/sysml/server/sysmlv2_server.py --port 9000
+python server/sysmlv2_server.py --port 9000
 ```
 
 ## Run clients
@@ -24,27 +24,27 @@ python /tmp/workspace/rsanz/sysml/server/sysmlv2_server.py --port 9000
 ### Python
 
 ```bash
-python /tmp/workspace/rsanz/sysml/clients/python/sysmlv2_client.py --base-url http://127.0.0.1:9000 --endpoint /about
+python clients/python/sysmlv2_client.py --base-url http://127.0.0.1:9000 --endpoint /about
 ```
 
 ### Rust
 
 ```bash
-cargo run --manifest-path /tmp/workspace/rsanz/sysml/clients/rust/Cargo.toml -- http://127.0.0.1:9000 /about
+cargo run --manifest-path clients/rust/Cargo.toml -- http://127.0.0.1:9000 /about
 ```
 
 ### C++
 
 ```bash
-cmake -S /tmp/workspace/rsanz/sysml/clients/cpp -B /tmp/workspace/rsanz/sysml/clients/cpp/build
-cmake --build /tmp/workspace/rsanz/sysml/clients/cpp/build
-/tmp/workspace/rsanz/sysml/clients/cpp/build/sysmlv2_client http://127.0.0.1:9000 /about
+cmake -S clients/cpp -B clients/cpp/build
+cmake --build clients/cpp/build
+./clients/cpp/build/sysmlv2_client http://127.0.0.1:9000 /about
 ```
 
 ## Smoke test
 
 ```bash
-cmake -S /tmp/workspace/rsanz/sysml/clients/cpp -B /tmp/workspace/rsanz/sysml/clients/cpp/build
-cmake --build /tmp/workspace/rsanz/sysml/clients/cpp/build
-python /tmp/workspace/rsanz/sysml/tests_smoke.py
+cmake -S clients/cpp -B clients/cpp/build
+cmake --build clients/cpp/build
+python tests_smoke.py
 ```

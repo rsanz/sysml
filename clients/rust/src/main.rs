@@ -3,7 +3,10 @@ use std::io::{Read, Write};
 use std::net::TcpStream;
 
 fn parse_base_url(base_url: &str) -> (&str, u16) {
-    let stripped = base_url.strip_prefix("http://").unwrap_or(base_url);
+    let stripped = base_url
+        .strip_prefix("http://")
+        .or_else(|| base_url.strip_prefix("https://"))
+        .unwrap_or(base_url);
     let mut parts = stripped.split(':');
     let host = parts.next().unwrap_or("127.0.0.1");
     let port = parts
@@ -31,7 +34,11 @@ fn main() {
 
     let mut response = String::new();
     stream.read_to_string(&mut response).expect("read failed");
-    if let Some(body) = response.split("\r\n\r\n").nth(1) {
+    if let Some(body) = response
+        .split("\r\n\r\n")
+        .nth(1)
+        .or_else(|| response.split("\n\n").nth(1))
+    {
         println!("{}", body.trim());
     } else {
         println!("{}", response.trim());
